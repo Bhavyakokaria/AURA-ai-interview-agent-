@@ -1,17 +1,37 @@
-import { Candidate, FocusDay, InterviewFeedback, SessionState, TranscriptItem } from './types';
+import { kv } from '@vercel/kv';
+import { Candidate, FocusDay, SessionState, TranscriptItem } from './types';
 import { selectFocusDays } from './focusDays';
 
-// Use globalThis singleton pattern to preserve session store during Next.js HMR
-const globalForStore = globalThis as unknown as {
-  sessionStore: Map<string, SessionState>;
-};
+const SESSION_TTL_SECONDS = 60 * 60 * 2; // 2 hours
 
-const store = globalForStore.sessionStore || new Map<string, SessionState>();
-if (process.env.NODE_ENV !== 'production') {
-  globalForStore.sessionStore = store;
+function kvKey(sessionId: string): string {
+  return `session:${sessionId}`;
 }
 
-export function createSession(sessionId: string, candidate: Candidate): SessionState {
+// Vercel KV stores plain JSON — Set is not serializable, so we store
+// coveredDays as a plain number[] and rehydrate into a real Set on read.
+interface SerializedSession extends Omit<SessionState, 'coveredDays'> {
+  coveredDays: number[];
+}
+
+function serialize(session: SessionState): SerializedSession {
+  return {
+    ...session,
+    coveredDays: Array.from(session.coveredDays),
+  };
+}
+
+function deserialize(raw: SerializedSession): SessionState {
+  return {
+    ...raw,
+    coveredDays: new Set<number>(raw.coveredDays),
+  };
+}
+
+export async function createSession(
+  sessionId: string,
+  candidate: Candidate
+): Promise<SessionState> {
   const focusDays: FocusDay[] = selectFocusDays(candidate);
   const session: SessionState = {
     sessionId,
@@ -22,45 +42,59 @@ export function createSession(sessionId: string, candidate: Candidate): SessionS
     questionCount: 0,
     done: false,
   };
-  store.set(sessionId, session);
+  await kv.set(kvKey(sessionId), serialize(session), { ex: SESSION_TTL_SECONDS });
   return session;
 }
 
-export function getSession(sessionId: string): SessionState | undefined {
-  return store.get(sessionId);
+export async function getSession(
+  sessionId: string
+): Promise<SessionState | undefined> {
+  const raw = await kv.get<SerializedSession>(kvKey(sessionId));
+  if (!raw) return undefined;
+  return deserialize(raw);
 }
 
-export function updateSession(sessionId: string, updates: Partial<SessionState>): SessionState | undefined {
-  const session = store.get(sessionId);
+export async function updateSession(
+  sessionId: string,
+  updates: Partial<SessionState>
+): Promise<SessionState | undefined> {
+  const session = await getSession(sessionId);
   if (!session) return undefined;
 
-  const updatedSession = { ...session, ...updates };
-  store.set(sessionId, updatedSession);
+  const updatedSession: SessionState = { ...session, ...updates };
+  await kv.set(kvKey(sessionId), serialize(updatedSession), { ex: SESSION_TTL_SECONDS });
   return updatedSession;
 }
 
-export function addTranscriptItem(sessionId: string, item: TranscriptItem): SessionState | undefined {
-  const session = store.get(sessionId);
+export async function addTranscriptItem(
+  sessionId: string,
+  item: TranscriptItem
+): Promise<SessionState | undefined> {
+  const session = await getSession(sessionId);
   if (!session) return undefined;
 
   session.transcript.push(item);
-  store.set(sessionId, session);
+  await kv.set(kvKey(sessionId), serialize(session), { ex: SESSION_TTL_SECONDS });
   return session;
 }
 
-export function markDayCovered(sessionId: string, day: number): SessionState | undefined {
-  const session = store.get(sessionId);
+export async function markDayCovered(
+  sessionId: string,
+  day: number
+): Promise<SessionState | undefined> {
+  const session = await getSession(sessionId);
   if (!session) return undefined;
 
   session.coveredDays.add(day);
-  store.set(sessionId, session);
+  await kv.set(kvKey(sessionId), serialize(session), { ex: SESSION_TTL_SECONDS });
   return session;
 }
 
-export function deleteSession(sessionId: string): boolean {
-  return store.delete(sessionId);
+export async function deleteSession(sessionId: string): Promise<boolean> {
+  const deleted = await kv.del(kvKey(sessionId));
+  return deleted > 0;
 }
 
-export function clearAllSessions(): void {
-  store.clear();
+export async function clearAllSessions(): Promise<void> {
+  // Not used in production paths; left as a no-op stub for compatibility.
 }

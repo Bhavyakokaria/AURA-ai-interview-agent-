@@ -40,3 +40,18 @@ REQUIREMENTS
 10. Do not hardcode the Gemini API key anywhere — env var only, and add a .env.example file.
 
 Set up git and commit after this initial scaffold is working, then continue with small incremental commits as we build each piece — do not do one giant commit.
+
+## 2. Replace in-memory session store with Vercel KV
+
+The current session store in lib/sessionStore.ts uses an in-memory Map with a globalThis singleton pattern. This works in local dev but breaks in production on Vercel because serverless functions don't guarantee the same instance handles consecutive requests — session state can silently disappear between interview turns.
+
+Fix this by replacing the in-memory store with Vercel KV (Upstash Redis):
+
+1. Add @vercel/kv as a dependency.
+2. Rewrite lib/sessionStore.ts so createSession, getSession, updateSession, and deleteSession all read/write through Vercel KV instead of a Map. Keep the exact same function signatures so nothing else in the codebase needs to change.
+3. Store each SessionState as JSON under key `session:{sessionId}`, with a reasonable TTL (e.g. 2 hours) so stale sessions don't linger forever.
+4. Add KV_REST_API_URL and KV_REST_API_TOKEN to .env.example as required env vars (placeholder values only, do not add real values).
+5. Update PROMPTS.md to append this as the next numbered entry with the prompt text.
+6. Commit this as its own commit: "fix: replace in-memory session store with Vercel KV for serverless persistence".
+
+Do not change the API contract, the focus-day logic, or any other files.
