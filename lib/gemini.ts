@@ -14,7 +14,7 @@ export function getGeminiModel(modelName?: string) {
   const apiKey = getApiKey();
   const genAI = new GoogleGenerativeAI(apiKey);
   // Default to gemini-2.5-flash-lite as requested in prompt, fallback to process.env.GEMINI_MODEL or gemini-2.0-flash / gemini-1.5-flash if needed
-  const selectedModel = modelName || process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
+  const selectedModel = modelName || process.env.GEMINI_MODEL || 'gemini-flash-latest';
   return genAI.getGenerativeModel({ model: selectedModel });
 }
 
@@ -71,10 +71,9 @@ export async function generateFinalFeedback(session: SessionState): Promise<Inte
   const prompt = buildFeedbackPrompt(session);
 
   const modelCandidates = [
-    process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite',
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash'
+    process.env.GEMINI_MODEL || 'gemini-flash-latest',
+    'gemini-flash-lite-latest',
+    'gemini-2.5-flash'
   ];
 
   let rawContent = '';
