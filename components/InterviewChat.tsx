@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Candidate, FocusDay, TranscriptItem } from '@/lib/types';
 import { Bot, User, Send, CheckCircle2, BookOpen, MessageSquare } from 'lucide-react';
 
@@ -26,12 +27,8 @@ export default function InterviewChat({
   const [inputMessage, setInputMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [transcript, isLoading]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -45,149 +42,147 @@ export default function InterviewChat({
   const isDaysMet = coveredDays.length >= 4;
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col h-[750px] glass-panel rounded-2xl overflow-hidden border border-slate-800">
-      {/* Header Bar with Live Badges */}
-      <div className="p-4 bg-slate-900/80 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="w-full max-w-4xl mx-auto flex flex-col h-[80vh] sm:h-[750px] glass-panel rounded-2xl overflow-hidden border border-[color:var(--border)]"
+    >
+      <div className="p-3 sm:p-4 bg-black/20 border-b border-[color:var(--border)] flex flex-wrap items-center justify-between gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center space-x-3 min-w-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-500/15 border border-blue-500/25 flex items-center justify-center text-[color:var(--amber)] shrink-0">
             <Bot className="w-5 h-5" />
           </div>
-          <div>
-            <h2 className="text-base font-bold text-slate-100 flex items-center space-x-2">
-              <span>Interviewing {candidate.member.name}</span>
-            </h2>
-            <p className="text-xs text-slate-400">{candidate.member.jobRole} • Senior Tech Lead AI Interviewer</p>
+          <div className="min-w-0">
+            <h2 className="text-sm sm:text-base font-bold text-[color:var(--foreground)] truncate">Interviewing {candidate.member.name}</h2>
+            <p className="text-[11px] sm:text-xs text-[color:var(--dim)] truncate">{candidate.member.jobRole} • Senior Tech Lead</p>
           </div>
         </div>
 
-        {/* Live Status Badges */}
-        <div className="flex items-center space-x-3">
-          {/* Question Count Badge */}
-          <div
-            className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl border text-xs font-semibold ${
-              isQuestionsMet
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                : 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30'
-            }`}
-          >
+        <div className="flex items-center gap-2">
+          <div className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg border font-mono text-[10px] sm:text-xs font-semibold ${
+            isQuestionsMet ? 'bg-teal-500/10 text-teal-400 border-teal-500/30' : 'bg-blue-500/10 text-[color:var(--amber)] border-blue-500/25'
+          }`}>
             <MessageSquare className="w-3.5 h-3.5" />
-            <span>Questions: {questionCount}/8</span>
-            {isQuestionsMet && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
+            <span>{questionCount}/8</span>
+            {isQuestionsMet && <CheckCircle2 className="w-3.5 h-3.5" />}
           </div>
-
-          {/* Days Covered Badge */}
-          <div
-            className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl border text-xs font-semibold ${
-              isDaysMet
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                : 'bg-purple-500/10 text-purple-300 border-purple-500/30'
-            }`}
-          >
+          <div className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg border font-mono text-[10px] sm:text-xs font-semibold ${
+            isDaysMet ? 'bg-teal-500/10 text-teal-400 border-teal-500/30' : 'bg-rose-500/10 text-rose-300 border-rose-500/25'
+          }`}>
             <BookOpen className="w-3.5 h-3.5" />
-            <span>Days covered: {coveredDays.length}/4</span>
-            {isDaysMet && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
+            <span>{coveredDays.length}/4</span>
+            {isDaysMet && <CheckCircle2 className="w-3.5 h-3.5" />}
           </div>
         </div>
       </div>
 
-      {/* Focus Topics Pill Tracker Bar */}
-      <div className="px-4 py-2 bg-slate-950/40 border-b border-slate-800/60 flex items-center space-x-2 overflow-x-auto text-[11px] shrink-0">
-        <span className="text-slate-400 font-medium uppercase tracking-wider text-[10px] shrink-0">Coverage:</span>
+      <div className="px-3 sm:px-4 py-2 bg-black/30 border-b border-[color:var(--border)]/60 flex items-center space-x-2 overflow-x-auto text-[11px] shrink-0 font-mono">
+        <span className="text-[color:var(--dim)] shrink-0">
+          coverage <span className="cursor-blink">_</span>
+        </span>
         {focusDays.map((fd) => {
           const isCovered = coveredDays.includes(fd.day);
           return (
-            <span
+            <motion.span
               key={fd.day}
+              animate={{ scale: isCovered ? [1, 1.08, 1] : 1 }}
+              transition={{ duration: 0.3 }}
               className={`px-2 py-0.5 rounded-md border shrink-0 transition ${
                 isCovered
-                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-semibold'
-                  : 'bg-slate-800/40 text-slate-400 border-slate-700/50'
+                  ? 'bg-teal-500/15 text-teal-300 border-teal-500/35 font-semibold'
+                  : 'bg-white/5 text-[color:var(--dim)] border-[color:var(--border)]'
               }`}
             >
-              Day {fd.day}: {fd.title} {isCovered ? '✓' : ''}
-            </span>
+              d{String(fd.day).padStart(2, '0')} {isCovered ? '✓' : ''}
+            </motion.span>
           );
         })}
       </div>
 
-      {/* Messages Transcript Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {transcript.map((msg, index) => {
-          const isInterviewer = msg.role === 'interviewer';
-          return (
-            <div
-              key={index}
-              className={`flex items-start space-x-3 ${isInterviewer ? 'justify-start' : 'justify-end'}`}
-            >
-              {isInterviewer && (
-                <div className="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-300 shrink-0 mt-1">
-                  <Bot className="w-4 h-4" />
-                </div>
-              )}
-
-              <div
-                className={`max-w-[80%] rounded-2xl p-4 text-sm leading-relaxed shadow-sm ${
-                  isInterviewer
-                    ? 'bg-slate-800/90 text-slate-100 border border-slate-700/80 rounded-tl-none'
-                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-tr-none'
-                }`}
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4">
+        <AnimatePresence initial={false}>
+          {transcript.map((msg, index) => {
+            const isInterviewer = msg.role === 'interviewer';
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+                className={`flex items-start space-x-2 sm:space-x-3 ${isInterviewer ? 'justify-start' : 'justify-end'}`}
               >
-                <div className="flex items-center justify-between mb-1 text-[10px] opacity-75">
-                  <span className="font-semibold uppercase tracking-wider">
-                    {isInterviewer ? 'Senior Tech Lead' : candidate.member.name}
-                  </span>
+                {isInterviewer && (
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-500/15 border border-blue-500/25 flex items-center justify-center text-[color:var(--amber)] shrink-0 mt-1">
+                    <Bot className="w-4 h-4" />
+                  </div>
+                )}
+                <div
+                  className={`max-w-[85%] sm:max-w-[80%] rounded-2xl p-3 sm:p-4 text-sm leading-relaxed shadow-sm ${
+                    isInterviewer
+                      ? 'bg-white/5 text-[color:var(--foreground)] border border-[color:var(--border)] rounded-tl-none'
+                      : 'bg-[color:var(--amber)] text-[#0a0e14] rounded-tr-none font-medium'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1 text-[10px] font-mono opacity-70">
+                    <span className="font-semibold uppercase tracking-wider">
+                      {isInterviewer ? 'senior_tech_lead' : candidate.member.name.split(' ')[0].toLowerCase()}
+                    </span>
+                  </div>
+                  <div className="whitespace-pre-wrap">{msg.content}</div>
                 </div>
-                <div className="whitespace-pre-wrap">{msg.content}</div>
-              </div>
+                {!isInterviewer && (
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-black/30 border border-[color:var(--border)] flex items-center justify-center text-[color:var(--foreground)] shrink-0 mt-1">
+                    <User className="w-4 h-4" />
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
 
-              {!isInterviewer && (
-                <div className="w-8 h-8 rounded-lg bg-purple-600/30 border border-purple-500/40 flex items-center justify-center text-purple-300 shrink-0 mt-1">
-                  <User className="w-4 h-4" />
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {/* Typing indicator when waiting for LLM response */}
         {isLoading && (
-          <div className="flex items-start space-x-3 justify-start">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-300 shrink-0 mt-1">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-start space-x-3 justify-start">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-500/15 border border-blue-500/25 flex items-center justify-center text-[color:var(--amber)] shrink-0 mt-1">
               <Bot className="w-4 h-4" />
             </div>
-            <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl rounded-tl-none p-4 flex items-center space-x-2">
-              <span className="text-xs text-slate-400 font-medium">Interviewer is formulating next question...</span>
+            <div className="bg-white/5 border border-[color:var(--border)] rounded-2xl rounded-tl-none p-4 flex items-center space-x-2">
+              <span className="text-xs text-[color:var(--dim)] font-mono">formulating next question</span>
               <div className="flex space-x-1">
-                <div className="w-2 h-2 rounded-full bg-indigo-400 pulse-dot-1"></div>
-                <div className="w-2 h-2 rounded-full bg-purple-400 pulse-dot-2"></div>
-                <div className="w-2 h-2 rounded-full bg-pink-400 pulse-dot-3"></div>
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full bg-[color:var(--amber)]"
+                    animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
+                    transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+                  />
+                ))}
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
-
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Form */}
-      <form onSubmit={handleSubmit} className="p-4 bg-slate-900/90 border-t border-slate-800 flex items-center space-x-3 shrink-0">
+      <form onSubmit={handleSubmit} className="p-3 sm:p-4 bg-black/20 border-t border-[color:var(--border)] flex items-center space-x-2 sm:space-x-3 shrink-0">
         <input
           type="text"
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
-          placeholder="Type your technical response here..."
+          placeholder="Type your response..."
           disabled={isLoading}
-          className="flex-1 glass-input px-4 py-3 rounded-xl text-sm placeholder:text-slate-500 focus:outline-none"
+          className="flex-1 glass-input px-4 py-3 rounded-xl text-sm placeholder:text-[color:var(--dim)] focus:outline-none min-w-0"
         />
-        <button
+        <motion.button
+          whileTap={{ scale: 0.95 }}
           type="submit"
           disabled={isLoading || !inputMessage.trim()}
-          className="px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium text-sm shadow-md flex items-center space-x-2 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+          className="px-4 sm:px-5 py-3 rounded-xl bg-[color:var(--amber)] hover:brightness-110 text-[#0a0e14] font-semibold text-sm shadow-md flex items-center space-x-2 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shrink-0"
         >
-          <span>Send</span>
+          <span className="hidden sm:inline">Send</span>
           <Send className="w-4 h-4" />
-        </button>
+        </motion.button>
       </form>
-    </div>
+    </motion.div>
   );
 }

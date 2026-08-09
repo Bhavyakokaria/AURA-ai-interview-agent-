@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { Candidate, FocusDay } from '@/lib/types';
 import { selectFocusDays } from '@/lib/focusDays';
 import { User, Briefcase, GraduationCap, Award, Play, Target, HelpCircle, CheckCircle2, AlertTriangle } from 'lucide-react';
@@ -13,6 +14,12 @@ interface CandidateSelectorProps {
   isLoading: boolean;
 }
 
+const categoryStyles = {
+  gap: { badge: 'bg-rose-500/10 text-rose-400 border-rose-500/25', Icon: AlertTriangle },
+  shaky: { badge: 'bg-amber-500/10 text-amber-400 border-amber-500/25', Icon: HelpCircle },
+  confident: { badge: 'bg-teal-500/10 text-teal-400 border-teal-500/25', Icon: CheckCircle2 },
+};
+
 export default function CandidateSelector({
   candidates,
   selectedCandidate,
@@ -20,16 +27,18 @@ export default function CandidateSelector({
   onStartInterview,
   isLoading,
 }: CandidateSelectorProps) {
-  const focusDays: FocusDay[] = useMemo(() => {
-    return selectFocusDays(selectedCandidate);
-  }, [selectedCandidate]);
+  const focusDays: FocusDay[] = useMemo(() => selectFocusDays(selectedCandidate), [selectedCandidate]);
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
-      {/* Candidate Dropdown Selector */}
-      <div className="glass-panel p-6 rounded-2xl">
-        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-          Select Candidate Profile for Assessment
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="w-full max-w-4xl mx-auto space-y-4 sm:space-y-6"
+    >
+      <div className="glass-panel p-4 sm:p-6 rounded-2xl">
+        <label className="block font-mono text-[11px] font-semibold uppercase tracking-wider text-[color:var(--dim)] mb-2">
+          select candidate - profile
         </label>
         <select
           value={selectedCandidate.member.id}
@@ -37,126 +46,124 @@ export default function CandidateSelector({
             const found = candidates.find((c) => c.member.id === e.target.value);
             if (found) onSelectCandidate(found);
           }}
-          className="w-full glass-input px-4 py-3 rounded-xl font-medium text-slate-100 cursor-pointer text-base"
+          className="w-full glass-input px-4 py-3 rounded-xl font-medium text-[color:var(--foreground)] cursor-pointer text-sm sm:text-base"
         >
           {candidates.map((c) => (
-            <option key={c.member.id} value={c.member.id} className="bg-slate-900 text-slate-100">
+            <option key={c.member.id} value={c.member.id} className="bg-[#0a0e14] text-[color:var(--foreground)]">
               {c.member.name} — {c.member.jobRole} ({c.member.yearsExperience} yrs exp)
             </option>
           ))}
         </select>
       </div>
 
-      {/* Candidate Card & Details */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Profile Card */}
-        <div className="glass-panel p-6 rounded-2xl md:col-span-1 space-y-4">
-          <div className="flex items-center space-x-3 pb-3 border-b border-slate-800">
-            <div className="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-              <User className="w-6 h-6" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        <motion.div
+          key={selectedCandidate.member.id + '-profile'}
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3 }}
+          className="glass-panel p-5 sm:p-6 rounded-2xl md:col-span-1 space-y-4"
+        >
+          <div className="flex items-center space-x-3 pb-3 border-b border-[color:var(--border)]">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-blue-500/15 border border-blue-500/25 flex items-center justify-center text-[color:var(--amber)] shrink-0">
+              <User className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-slate-100">{selectedCandidate.member.name}</h2>
-              <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-bold text-[color:var(--foreground)] truncate">{selectedCandidate.member.name}</h2>
+              <span className="inline-block text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/20">
                 {selectedCandidate.member.status}
               </span>
             </div>
           </div>
 
           <div className="space-y-3 text-sm">
-            <div className="flex items-center text-slate-300">
-              <Briefcase className="w-4 h-4 mr-2 text-indigo-400 shrink-0" />
-              <span>{selectedCandidate.member.jobRole}</span>
+            <div className="flex items-center text-[color:var(--foreground)]">
+              <Briefcase className="w-4 h-4 mr-2 text-[color:var(--amber)] shrink-0" />
+              <span className="truncate">{selectedCandidate.member.jobRole}</span>
             </div>
-            <div className="flex items-center text-slate-300">
-              <Award className="w-4 h-4 mr-2 text-amber-400 shrink-0" />
+            <div className="flex items-center text-[color:var(--foreground)]">
+              <Award className="w-4 h-4 mr-2 text-teal-400 shrink-0" />
               <span>{selectedCandidate.member.yearsExperience} Years Experience</span>
             </div>
-            <div className="flex items-center text-slate-300">
-              <GraduationCap className="w-4 h-4 mr-2 text-purple-400 shrink-0" />
-              <span>{selectedCandidate.member.education}</span>
+            <div className="flex items-center text-[color:var(--foreground)]">
+              <GraduationCap className="w-4 h-4 mr-2 text-rose-300 shrink-0" />
+              <span className="truncate">{selectedCandidate.member.education}</span>
             </div>
           </div>
 
-          {/* Cohort Signals */}
-          <div className="pt-4 border-t border-slate-800 grid grid-cols-3 gap-2 text-center">
-            <div className="bg-slate-800/40 p-2 rounded-lg">
-              <div className="text-lg font-bold text-indigo-400">{selectedCandidate.signals.missionsCompleted}</div>
-              <div className="text-[10px] text-slate-400 uppercase">Missions</div>
-            </div>
-            <div className="bg-slate-800/40 p-2 rounded-lg">
-              <div className="text-lg font-bold text-emerald-400">{selectedCandidate.signals.missionsFirstTry}</div>
-              <div className="text-[10px] text-slate-400 uppercase">1st Try</div>
-            </div>
-            <div className="bg-slate-800/40 p-2 rounded-lg">
-              <div className="text-lg font-bold text-purple-400">{selectedCandidate.signals.commitDays}</div>
-              <div className="text-[10px] text-slate-400 uppercase">Commit Days</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Selected Focus Days Preview */}
-        <div className="glass-panel p-6 rounded-2xl md:col-span-2 space-y-4 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-2">
-                <Target className="w-5 h-5 text-indigo-400" />
-                <h3 className="text-base font-semibold text-slate-100">Target Interview Focus Areas</h3>
+          <div className="pt-4 border-t border-[color:var(--border)] grid grid-cols-3 gap-2 text-center">
+            {[
+              { val: selectedCandidate.signals.missionsCompleted, label: 'Missions', color: 'text-[color:var(--amber)]' },
+              { val: selectedCandidate.signals.missionsFirstTry, label: '1st Try', color: 'text-teal-400' },
+              { val: selectedCandidate.signals.commitDays, label: 'Commits', color: 'text-rose-300' },
+            ].map((s) => (
+              <div key={s.label} className="bg-black/20 p-2 rounded-lg">
+                <div className={`text-lg font-bold font-mono ${s.color}`}>{s.val}</div>
+                <div className="text-[9px] text-[color:var(--dim)] uppercase tracking-wide">{s.label}</div>
               </div>
-              <span className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded-md">
-                {focusDays.length} Curriculum Days Selected
+            ))}
+          </div>
+        </motion.div>
+
+        <motion.div
+          key={selectedCandidate.member.id + '-focus'}
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, delay: 0.05 }}
+          className="glass-panel p-5 sm:p-6 rounded-2xl md:col-span-2 space-y-4 flex flex-col justify-between"
+        >
+          <div>
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <div className="flex items-center space-x-2">
+                <Target className="w-5 h-5 text-[color:var(--amber)]" />
+                <h3 className="text-sm sm:text-base font-semibold text-[color:var(--foreground)]">Target Interview Focus Areas</h3>
+              </div>
+              <span className="font-mono text-[10px] text-[color:var(--dim)] bg-black/30 px-2 py-1 rounded-md">
+                {focusDays.length} DAYS SELECTED
               </span>
             </div>
-            <p className="text-xs text-slate-400 mb-4">
-              Our agent automatically classified this candidate's history to pick target curriculum days:
-            </p>
 
-            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-              {focusDays.map((fd) => {
-                let categoryBadgeClass = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
-                let Icon = CheckCircle2;
-                if (fd.category === 'gap') {
-                  categoryBadgeClass = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
-                  Icon = AlertTriangle;
-                } else if (fd.category === 'shaky') {
-                  categoryBadgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-                  Icon = HelpCircle;
-                }
-
+            <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1">
+              {focusDays.map((fd, i) => {
+                const style = categoryStyles[fd.category];
+                const Icon = style.Icon;
                 return (
-                  <div
+                  <motion.div
                     key={fd.day}
-                    className="p-3 rounded-xl bg-slate-900/50 border border-slate-800 flex items-start justify-between text-xs hover:border-slate-700 transition"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: '-20px' }}
+                    transition={{ duration: 0.3, delay: i * 0.04 }}
+                    className="p-3 rounded-xl bg-black/20 border border-[color:var(--border)] flex items-start justify-between gap-2 text-xs hover:border-white/15 transition"
                   >
-                    <div className="space-y-1 pr-2">
+                    <div className="space-y-1 min-w-0">
                       <div className="flex items-center space-x-2">
-                        <span className="font-bold text-slate-200">Day {fd.day}:</span>
-                        <span className="text-slate-300 font-medium">{fd.title}</span>
+                        <span className="font-mono font-bold text-[color:var(--amber)]">d{String(fd.day).padStart(2, '0')}</span>
+                        <span className="text-[color:var(--foreground)] font-medium truncate">{fd.title}</span>
                       </div>
-                      <p className="text-[11px] text-slate-400 line-clamp-1">{fd.reasoning}</p>
+                      <p className="text-[11px] text-[color:var(--dim)] line-clamp-1">{fd.reasoning}</p>
                     </div>
-
-                    <span
-                      className={`inline-flex items-center space-x-1 px-2 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wider border shrink-0 ${categoryBadgeClass}`}
-                    >
+                    <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded-md text-[10px] font-mono font-semibold uppercase border shrink-0 ${style.badge}`}>
                       <Icon className="w-3 h-3" />
                       <span>{fd.category}</span>
                     </span>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
           </div>
 
-          <button
+          <motion.button
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.98 }}
             onClick={onStartInterview}
             disabled={isLoading}
-            className="w-full mt-4 py-3.5 px-6 rounded-xl font-semibold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 shadow-lg shadow-purple-500/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
+            className="w-full mt-4 py-3.5 px-6 rounded-xl font-semibold text-[#0a0e14] bg-[color:var(--amber)] hover:brightness-110 shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
           >
             {isLoading ? (
               <span className="inline-flex items-center space-x-2">
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                <span>Initializing Interview Session...</span>
+                <span className="w-4 h-4 border-2 border-[#0a0e14] border-t-transparent rounded-full animate-spin" />
+                <span>Initializing Session...</span>
               </span>
             ) : (
               <>
@@ -164,9 +171,9 @@ export default function CandidateSelector({
                 <span>Start Technical Interview</span>
               </>
             )}
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

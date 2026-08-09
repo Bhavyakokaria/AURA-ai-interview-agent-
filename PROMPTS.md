@@ -55,3 +55,23 @@ Fix this by replacing the in-memory store with Vercel KV (Upstash Redis):
 6. Commit this as its own commit: "fix: replace in-memory session store with Vercel KV for serverless persistence".
 
 Do not change the API contract, the focus-day logic, or any other files.
+
+## 3. Fix non-answer detection in interviewer prompt
+
+The interviewer prompt logic in lib/prompts.ts isn't correctly detecting low-quality answers. When a candidate responds with something like "hello" or a one-word non-answer, the agent should recognize this as not actually answering the technical question and ask a clarifying follow-up instead of advancing to the next curriculum day.
+
+Updated the system prompt's flow rules to:
+1. Explicitly check whether the candidate's response actually addresses the technical question asked, not just whether a response exists.
+2. Treat greetings, filler, or off-topic replies as non-answers: ask a direct follow-up re-asking or clarifying the same question, without advancing questionCount or marking the day covered.
+3. Only advance to a new curriculum day on a substantive, on-topic response.
+4. Added a few-shot example in the prompt showing a non-answer like "hello" getting a follow-up instead of a topic change.
+
+Commit: "fix: improve non-answer detection in interviewer prompt logic"
+
+## 4. Fix deprecated Gemini model names
+
+Discovered via Vercel logs that every Gemini API call was silently failing — the model fallback chain in lib/gemini.ts (gemini-2.5-flash-lite, gemini-2.5-flash, gemini-2.0-flash-lite, gemini-2.0-flash, gemini-1.5-flash) was entirely deprecated/retired model names, causing every interview turn to run on hardcoded fallback text instead of real LLM output.
+
+Fixed by replacing all pinned model names with Google's floating alias model names (gemini-flash-latest, gemini-flash-lite-latest, gemini-2.5-flash) across all three locations in the file: getGeminiModel's default, generateInterviewerTurn's candidate list, and generateFinalFeedback's candidate list.
+
+Commit: "fix: replace deprecated pinned Gemini model names with latest aliases" and "fix: update remaining model candidate list in generateInterviewerTurn"

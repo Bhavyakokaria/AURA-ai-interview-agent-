@@ -1,14 +1,19 @@
 'use client';
 
+import { useScroll, useTransform } from 'framer-motion';
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Candidate, FocusDay, InterviewFeedback, TranscriptItem } from '@/lib/types';
 import { selectFocusDays } from '@/lib/focusDays';
 import CandidateSelector from '@/components/CandidateSelector';
 import InterviewChat from '@/components/InterviewChat';
 import FeedbackReport from '@/components/FeedbackReport';
+import AnimatedBackground from '@/components/AnimatedBackground';
 import { Sparkles, Terminal, Code2 } from 'lucide-react';
 
 export default function Home() {
+  const { scrollY } = useScroll();
+  const headerY = useTransform(scrollY, [0, 200], [0, -20]);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [sessionId, setSessionId] = useState<string>('');
@@ -20,7 +25,6 @@ export default function Home() {
   const [feedback, setFeedback] = useState<InterviewFeedback | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Load candidates on mount
   useEffect(() => {
     async function loadInitialData() {
       try {
@@ -41,7 +45,6 @@ export default function Home() {
 
   const focusDays: FocusDay[] = selectedCandidate ? selectFocusDays(selectedCandidate) : [];
 
-  // Start interview handler
   const handleStartInterview = async () => {
     if (!selectedCandidate) return;
     setIsLoading(true);
@@ -78,11 +81,9 @@ export default function Home() {
     }
   };
 
-  // Send candidate message turn handler
   const handleSendMessage = async (messageText: string) => {
     if (!sessionId || isLoading) return;
 
-    // Append candidate message locally
     const newTranscript: TranscriptItem[] = [...transcript, { role: 'candidate', content: messageText }];
     setTranscript(newTranscript);
     setIsLoading(true);
@@ -100,11 +101,8 @@ export default function Home() {
       const data = await res.json();
       if (res.ok) {
         setTranscript([...newTranscript, { role: 'interviewer', content: data.reply }]);
-        
-        // Track unique covered days dynamically
         setQuestionCount((prev) => prev + 1);
 
-        // Update covered days logic: cover next day sequentially if not yet present
         setCoveredDays((prev) => {
           if (prev.length < focusDays.length) {
             const nextFocus = focusDays.find((fd) => !prev.includes(fd.day));
@@ -139,71 +137,84 @@ export default function Home() {
   };
 
   return (
-    <main className="flex-1 flex flex-col max-w-7xl w-full mx-auto p-4 sm:p-6 md:p-8 space-y-6">
-      {/* Header Bar */}
-      <header className="glass-panel p-4 sm:p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg">
+    <main className="flex-1 flex flex-col max-w-7xl w-full mx-auto p-3 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
+      <AnimatedBackground />
+
+      <motion.header
+        style={{ y: headerY }}
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-panel p-4 sm:p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4"
+      >
+        <div className="flex items-center space-x-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-[color:var(--amber)] flex items-center justify-center text-[#0a0e14] shadow-lg shrink-0">
             <Sparkles className="w-5 h-5" />
           </div>
-          <div>
-            <h1 className="text-xl font-extrabold text-slate-100 tracking-tight flex items-center space-x-2">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-extrabold text-[color:var(--foreground)] tracking-tight flex items-center space-x-2 flex-wrap font-mono">
               <span>AI Interview Agent</span>
-              <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-                Live API
+              <span className="text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-400 border border-teal-500/25">
+                live_api
               </span>
             </h1>
-            <p className="text-xs text-slate-400">31-Day AI Cohort Technical Candidate Assessment</p>
+            <p className="text-xs text-[color:var(--dim)]">31-Day AI Cohort Technical Candidate Assessment</p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-4 text-xs font-mono text-slate-400">
+        <div className="hidden sm:flex items-center space-x-4 text-xs font-mono text-[color:var(--dim)]">
           <div className="flex items-center space-x-1.5">
-            <Terminal className="w-4 h-4 text-indigo-400" />
+            <Terminal className="w-4 h-4 text-[color:var(--amber)]" />
             <span>POST /api/interview</span>
           </div>
           {sessionId && (
-            <div className="hidden sm:flex items-center space-x-1.5 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
-              <Code2 className="w-3.5 h-3.5 text-purple-400" />
-              <span className="text-slate-300">ID: {sessionId.substring(0, 16)}...</span>
+            <div className="flex items-center space-x-1.5 bg-black/30 px-3 py-1.5 rounded-lg border border-[color:var(--border)]">
+              <Code2 className="w-3.5 h-3.5 text-teal-400" />
+              <span>{sessionId.substring(0, 16)}...</span>
             </div>
           )}
         </div>
-      </header>
+      </motion.header>
 
-      {/* Main View Router */}
       <div className="flex-1 flex flex-col justify-center">
-        {!isInterviewStarted ? (
-          selectedCandidate && (
-            <CandidateSelector
-              candidates={candidates}
-              selectedCandidate={selectedCandidate}
-              onSelectCandidate={setSelectedCandidate}
-              onStartInterview={handleStartInterview}
-              isLoading={isLoading}
-            />
-          )
-        ) : isDone && feedback && selectedCandidate ? (
-          <FeedbackReport
-            candidate={selectedCandidate}
-            feedback={feedback}
-            questionCount={questionCount}
-            coveredDaysCount={coveredDays.length}
-            onReset={handleReset}
-          />
-        ) : (
-          selectedCandidate && (
-            <InterviewChat
-              candidate={selectedCandidate}
-              focusDays={focusDays}
-              transcript={transcript}
-              questionCount={questionCount}
-              coveredDays={coveredDays}
-              onSendMessage={handleSendMessage}
-              isLoading={isLoading}
-            />
-          )
-        )}
+        <AnimatePresence mode="wait">
+          {!isInterviewStarted ? (
+            selectedCandidate && (
+              <motion.div key="selector" exit={{ opacity: 0, y: -12 }}>
+                <CandidateSelector
+                  candidates={candidates}
+                  selectedCandidate={selectedCandidate}
+                  onSelectCandidate={setSelectedCandidate}
+                  onStartInterview={handleStartInterview}
+                  isLoading={isLoading}
+                />
+              </motion.div>
+            )
+          ) : isDone && feedback && selectedCandidate ? (
+            <motion.div key="feedback" exit={{ opacity: 0, y: -12 }}>
+              <FeedbackReport
+                candidate={selectedCandidate}
+                feedback={feedback}
+                questionCount={questionCount}
+                coveredDaysCount={coveredDays.length}
+                onReset={handleReset}
+              />
+            </motion.div>
+          ) : (
+            selectedCandidate && (
+              <motion.div key="chat" exit={{ opacity: 0, y: -12 }}>
+                <InterviewChat
+                  candidate={selectedCandidate}
+                  focusDays={focusDays}
+                  transcript={transcript}
+                  questionCount={questionCount}
+                  coveredDays={coveredDays}
+                  onSendMessage={handleSendMessage}
+                  isLoading={isLoading}
+                />
+              </motion.div>
+            )
+          )}
+        </AnimatePresence>
       </div>
     </main>
   );
