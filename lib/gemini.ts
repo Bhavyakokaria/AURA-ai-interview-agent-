@@ -23,13 +23,11 @@ export async function generateInterviewerTurn(session: SessionState): Promise<{ 
 
   // Model fallback chain if a specific flash-lite model name variant is required by Google API
   const modelCandidates = [
-    process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite',
-    'gemini-2.5-flash',
-    'gemini-2.0-flash-lite',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash'
+    process.env.GEMINI_MODEL || 'gemini-flash-latest',
+    'gemini-flash-lite-latest',
+    'gemini-2.5-flash'
   ];
-
+  
   let rawReply = '';
   let lastError: any = null;
 
